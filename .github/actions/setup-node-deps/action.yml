@@ -1,0 +1,36 @@
+name: Setup Node with dependency caching
+description: >-
+  Caches node_modules by lockfile hash and skips npm ci on cache hit to cut
+  install time on warm runners.
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '22'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+
+    - name: Cache node_modules
+      id: cache-node-modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
+    - name: Install dependencies
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: npm ci
+      shell: bash
+
+    - name: Log cache outcome
+      shell: bash
+      run: |
+        echo "node_modules cache hit: ${{ steps.cache-node-modules.outputs.cache-hit }}"

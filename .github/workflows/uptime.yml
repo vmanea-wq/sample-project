@@ -1,0 +1,29 @@
+name: Uptime check
+
+on:
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GET GitHub Pages URL
+        env:
+          URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: |
+          echo "Checking $URL"
+          curl -fsSL --connect-timeout 15 --max-time 40 -o /dev/null "$URL"
+
+  uptime-notify-failure:
+    needs: ping
+    if: always() && needs.ping.result == 'failure'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      text: '${{ github.repository }} uptime check failed — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+      status: failure
+    secrets: inherit

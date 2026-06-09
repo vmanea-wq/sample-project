@@ -1,0 +1,56 @@
+name: Rollback GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA (or branch/tag) to rebuild and publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: ./.github/actions/setup-node-deps
+
+      - name: Build static site at ref ${{ inputs.ref }}
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: rebuild
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  pages-rollback-notify-failure:
+    needs: [rebuild, deploy]
+    if: always() && (needs.rebuild.result == 'failure' || needs.deploy.result == 'failure')
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      text: '${{ github.repository }} Pages rollback failed for ref ${{ github.event.inputs.ref }} — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+      status: failure
+    secrets: inherit

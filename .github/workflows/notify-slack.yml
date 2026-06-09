@@ -1,0 +1,30 @@
+name: Notify Slack
+
+on:
+  workflow_call:
+    inputs:
+      text:
+        required: true
+        type: string
+      status:
+        required: true
+        type: string
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MSG: ${{ inputs.text }}
+          STAT: ${{ inputs.status }}
+        run: |
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "Slack webhook not configured; skipping."
+            exit 0
+          fi
+          payload=$(jq -n --arg text "$MSG" --arg s "$STAT" '{text: ($s + ": " + $text)}')
+          curl -fsSL -X POST -H 'Content-type: application/json' \
+            -d "$payload" \
+            "$SLACK_WEBHOOK_URL"

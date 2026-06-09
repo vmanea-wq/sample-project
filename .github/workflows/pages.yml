@@ -20,18 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
+      - uses: ./.github/actions/setup-node-deps
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build for GitHub Pages
+      - name: Production build
         run: npm run build
         env:
-          # Project site: https://<user>.github.io/<repo>/
           BASE_PATH: /${{ github.event.repository.name }}/
 
       - uses: actions/upload-pages-artifact@v3
@@ -44,6 +37,74 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  health:
+    name: Deployment health check
+    needs: deploy
+    runs-on: ubuntu-latest
+    env:
+      PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+      FALLBACK_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+    steps:
+      - name: Wait for CDN edge updates
+        run: sleep 15
+
+      - name: HTTP check (retries)
+        run: |
+          set -euo pipefail
+          TARGET="${PAGE_URL:-}"
+          if [ -z "$TARGET" ] || [ "$TARGET" = "null" ]; then
+            TARGET="$FALLBACK_URL"
+          fi
+          echo "GET $TARGET"
+          curl -fsSL --retry 12 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
+            -o /dev/null \
+            "$TARGET"
+
+  # GitHub Pages exposes a single production URL (no blue/green slots). If the
+  # live site fails after a successful deploy job, re-queue the previous commit.
+  auto-rollback:
+    name: Queue rollback of previous commit
+    needs: [deploy, health]
+    if: >-
+      always() &&
+      needs.health.result == 'failure' &&
+      needs.deploy.result == 'success' &&
+      github.event_name == 'push' &&
+      github.event.before != '' &&
+      github.event.before != '0000000000000000000000000000000000000000'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch rollback workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run rollback-pages.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f ref="${{ github.event.before }}"
+
+  pages-notify-failure:
+    name: Slack — Pages failure
+    needs: [build, deploy, health]
+    if: >-
+      always() &&
+      (
+        needs.build.result == 'failure' ||
+        needs.deploy.result == 'failure' ||
+        needs.health.result == 'failure'
+      )
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      text: '${{ github.repository }} Pages — ${{ github.ref_name }} @ ${{ github.sha }} — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+      status: failure
+    secrets: inherit

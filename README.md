@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/vmanea-wq/sample-project/actions/workflows/ci.yml/badge.svg)](https://github.com/vmanea-wq/sample-project/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/vmanea-wq/sample-project/actions/workflows/pages.yml/badge.svg)](https://github.com/vmanea-wq/sample-project/actions/workflows/pages.yml)
+[![CodeQL](https://github.com/vmanea-wq/sample-project/actions/workflows/codeql.yml/badge.svg)](https://github.com/vmanea-wq/sample-project/actions/workflows/codeql.yml)
+[![Uptime](https://github.com/vmanea-wq/sample-project/actions/workflows/uptime.yml/badge.svg)](https://github.com/vmanea-wq/sample-project/actions/workflows/uptime.yml)
 
 A small **money management** web app: log income and expenses, see your balance, and keep everything in the browser with `localStorage` (no server).
 
@@ -16,12 +18,14 @@ Open the URL Vite prints (usually `http://localhost:5173`).
 
 ## Scripts
 
-| Command        | Description              |
-| -------------- | ------------------------ |
-| `npm run dev`  | Start dev server with HMR |
-| `npm run build` | Typecheck + production build |
+| Command | Description |
+| ------- | ----------- |
+| `npm run dev` | Dev server with HMR |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc -b` only |
+| `npm run build:vite` | Vite production bundle only |
+| `npm run build` | Typecheck + Vite build (local parity) |
 | `npm run preview` | Preview the production build |
-| `npm run lint` | ESLint                   |
 
 ## Features
 
@@ -33,10 +37,30 @@ Open the URL Vite prints (usually `http://localhost:5173`).
 
 Built with [Vite](https://vite.dev/) + [React](https://react.dev/) + TypeScript.
 
-## CI/CD
+## CI/CD overview
 
-- **CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): on every push and pull request to `main`, runs `npm ci`, ESLint, and a production build.
-- **GitHub Pages** ([`.github/workflows/pages.yml`](.github/workflows/pages.yml)): on push to `main` (and manual **Run workflow**), builds with `BASE_PATH` set to the repository name and deploys the `dist` folder.
+| Workflow | When | What |
+| -------- | ---- | ---- |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Push / PR to `main` | **Parallel** lint, typecheck, and Vite build; **OSV**, **`npm audit`**, optional **Snyk**; **Docker** build with **BuildKit GHA cache** (pushes only); optional **Slack** on failure |
+| [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) | Push / PR / weekly | **SAST** (CodeQL JavaScript) |
+| [`.github/workflows/pages.yml`](.github/workflows/pages.yml) | Push / manual | Build → **GitHub Pages** deploy → **HTTP health check** → optional **auto-rollback** + **Slack** on failure |
+| [`.github/workflows/rollback-pages.yml`](.github/workflows/rollback-pages.yml) | Manual / dispatched | Rebuild and redeploy an arbitrary **git ref** (manual rollback) |
+| [`.github/workflows/uptime.yml`](.github/workflows/uptime.yml) | Schedule / manual | **Synthetic monitor** (HTTP GET) + optional **Slack** on failure |
+
+Caching lives in [`.github/actions/setup-node-deps`](.github/actions/setup-node-deps/action.yml) (npm cache + `node_modules` restore / skip `npm ci`).
+
+**Blue/green on GitHub Pages:** not supported as a second URL slot; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for what we do instead and how to evolve to a true blue/green platform.
+
+**Performance notes:** [docs/PERFORMANCE.md](docs/PERFORMANCE.md) (includes why **pip** caching is not applicable here).
+
+### Optional repository secrets
+
+| Secret | Purpose |
+| ------ | ------- |
+| `SLACK_WEBHOOK_URL` | Slack incoming webhook for failure notifications |
+| `SNYK_TOKEN` | Enables Snyk in CI when set |
+
+If `SLACK_WEBHOOK_URL` is unset, notification jobs exit successfully without posting.
 
 ### Enable the live site
 
@@ -47,3 +71,12 @@ Built with [Vite](https://vite.dev/) + [React](https://react.dev/) + TypeScript.
    (replace with your username if the repo is under a different account or renamed).
 
 Local dev keeps the default base path `/`. Only the Pages workflow sets `BASE_PATH` for correct asset URLs on a project site.
+
+### Docker (optional runtime)
+
+```bash
+docker build -t pocket-ledger .
+docker run --rm -p 8080:80 pocket-ledger
+```
+
+Then open `http://localhost:8080`.
