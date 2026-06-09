@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# QA / test artifacts
+coverage
+qa/reports/*
+!qa/reports/.gitkeep
+playwright-report
+test-results
+qa/reports/playwright-html

@@ -26,6 +26,13 @@ Open the URL Vite prints (usually `http://localhost:5173`).
 | `npm run build:vite` | Vite production bundle only |
 | `npm run build` | Typecheck + Vite build (local parity) |
 | `npm run preview` | Preview the production build |
+| `npm run test` | Vitest (unit + component tests) |
+| `npm run test:coverage` | Vitest with **80%+** coverage gates |
+| `npm run qa:all` | Full QA pipeline (lint, security, k6, ZAP, E2E, dashboard) — see [docs/QA.md](docs/QA.md) |
+
+## QA automation
+
+End-to-end and quality tooling (Playwright **Page Object Model**, k6, ZAP, Snyk, ESLint complexity, Pylint, HTML dashboard) is documented in **[docs/QA.md](docs/QA.md)**.
 
 ## Features
 
@@ -41,7 +48,7 @@ Built with [Vite](https://vite.dev/) + [React](https://react.dev/) + TypeScript.
 
 | Workflow | When | What |
 | -------- | ---- | ---- |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Push / PR to `main` | **Parallel** lint, typecheck, and Vite build; **OSV**, **`npm audit`**, optional **Snyk**; **Docker** build with **BuildKit GHA cache** (pushes only); optional **Slack** on failure |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Push / PR to `main` | **Parallel** lint, typecheck, Vite build, **Vitest + coverage**; **OSV**, **`npm audit`**, optional **Snyk**; **Docker** build with **BuildKit GHA cache** (pushes only); optional **Slack** on failure |
 | [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) | Push / PR / weekly | **SAST** (CodeQL JavaScript) |
 | [`.github/workflows/pages.yml`](.github/workflows/pages.yml) | Push / manual | Build → **GitHub Pages** deploy → **HTTP health check** → optional **auto-rollback** + **Slack** on failure |
 | [`.github/workflows/rollback-pages.yml`](.github/workflows/rollback-pages.yml) | Manual / dispatched | Rebuild and redeploy an arbitrary **git ref** (manual rollback) |

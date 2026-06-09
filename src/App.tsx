@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import './App.css'
+import { formatLedgerWhen } from './lib/formatLedgerWhen'
 import type { TransactionKind } from './types'
 import { useTransactions } from './useTransactions'
 
@@ -8,16 +9,6 @@ const currency = new Intl.NumberFormat(undefined, {
   currency: 'USD',
   maximumFractionDigits: 2,
 })
-
-function formatWhen(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function App() {
   const { transactions, add, remove, clearAll, totals } = useTransactions()
@@ -34,7 +25,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" data-testid="app-root">
       <header className="header">
         <h1 className="title">Pocket Ledger</h1>
         <p className="tagline">Track income and spending in one place.</p>
@@ -45,19 +36,20 @@ function App() {
           <span className="summary-label">Balance</span>
           <span
             className={`summary-value ${totals.balance >= 0 ? 'positive' : 'negative'}`}
+            data-testid="balance-value"
           >
             {currency.format(totals.balance)}
           </span>
         </article>
         <article className="summary-card">
           <span className="summary-label">Income</span>
-          <span className="summary-value positive">
+          <span className="summary-value positive" data-testid="income-total">
             {currency.format(totals.income)}
           </span>
         </article>
         <article className="summary-card">
           <span className="summary-label">Expenses</span>
-          <span className="summary-value negative">
+          <span className="summary-value negative" data-testid="expense-total">
             {currency.format(totals.expense)}
           </span>
         </article>
@@ -70,6 +62,7 @@ function App() {
             type="button"
             className={kind === 'income' ? 'active income' : ''}
             onClick={() => setKind('income')}
+            data-testid="toggle-income"
           >
             Income
           </button>
@@ -77,6 +70,7 @@ function App() {
             type="button"
             className={kind === 'expense' ? 'active expense' : ''}
             onClick={() => setKind('expense')}
+            data-testid="toggle-expense"
           >
             Expense
           </button>
@@ -94,6 +88,7 @@ function App() {
               required
               min="0.01"
               step="0.01"
+              data-testid="input-amount"
             />
           </label>
           <label className="field grow">
@@ -106,9 +101,10 @@ function App() {
               onChange={(e) => setLabel(e.target.value)}
               required
               maxLength={120}
+              data-testid="input-label"
             />
           </label>
-          <button type="submit" className="submit">
+          <button type="submit" className="submit" data-testid="submit-add">
             Add
           </button>
         </div>
@@ -135,14 +131,16 @@ function App() {
         </div>
 
         {transactions.length === 0 ? (
-          <p className="empty">No entries yet. Add your first income or expense above.</p>
+          <p className="empty" data-testid="empty-state">
+            No entries yet. Add your first income or expense above.
+          </p>
         ) : (
-          <ul className="transactions">
+          <ul className="transactions" data-testid="transaction-list">
             {transactions.map((t) => (
               <li key={t.id} className={`row ${t.kind}`}>
                 <div className="row-main">
                   <span className="row-label">{t.label}</span>
-                  <time dateTime={t.createdAt}>{formatWhen(t.createdAt)}</time>
+                  <time dateTime={t.createdAt}>{formatLedgerWhen(t.createdAt)}</time>
                 </div>
                 <div className="row-actions">
                   <span
