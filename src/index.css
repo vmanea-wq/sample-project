@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+:root {
+  --bg: #f6f4f1;
+  --surface: #ffffff;
+  --surface-2: #f0eeeb;
+  --border: #e2ded8;
+  --text-strong: #1c1917;
+  --text-muted: #78716c;
+  --accent: #0d9488;
+  --accent-contrast: #fafaf9;
+  --income: #15803d;
+  --expense: #b91c1c;
+
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-strong);
+  background-color: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121110;
+    --surface: #1c1a18;
+    --surface-2: #262320;
+    --border: #3f3a36;
+    --text-strong: #fafaf9;
+    --text-muted: #a8a29e;
+    --accent: #2dd4bf;
+    --accent-contrast: #042f2e;
+    --income: #4ade80;
+    --expense: #f87171;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
