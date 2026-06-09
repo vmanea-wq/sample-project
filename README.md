@@ -44,6 +44,24 @@ End-to-end and quality tooling (Playwright **Page Object Model**, k6, ZAP, Snyk,
 
 Built with [Vite](https://vite.dev/) + [React](https://react.dev/) + TypeScript.
 
+**Architecture (diagrams):** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)  
+**Demo video shot list:** [docs/DEMO_OUTLINE.md](docs/DEMO_OUTLINE.md)
+
+## Submission & demo checklist
+
+Use this table when a rubric asks for repo link, live demo, screenshots, or a walkthrough video.
+
+| # | Deliverable | Status in this repo | What to do |
+|---|----------------|---------------------|-------------|
+| 1 | **GitHub repository link** | Ready | Use **[github.com/vmanea-wq/sample-project](https://github.com/vmanea-wq/sample-project)** (or your fork URL). |
+| 2 | **Live demo URL** | Ready after Pages deploy | **Settings → Pages → Source: GitHub Actions**, wait for green deploy, then share **`https://vmanea-wq.github.io/sample-project/`** (adjust if org/username/repo changes). |
+| 3 | **README + setup** | Ready | This file + [docs/QA.md](docs/QA.md). Clone → `npm install` → `npm run dev`. |
+| 4 | **Architecture diagram** | Ready (Mermaid) | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — view on GitHub or export PNG/SVG from [mermaid.live](https://mermaid.live). |
+| 5 | **Test coverage report** | Generated locally | Run `npm run test:coverage`, then open **`coverage/index.html`** in a browser; screenshot or attach the folder / export to PDF if required. |
+| 6 | **CI/CD pipeline screenshot** | You capture it | Open **[Actions](https://github.com/vmanea-wq/sample-project/actions)** → pick a successful **CI** (or **Deploy GitHub Pages**) run → screenshot the workflow graph / job list. |
+| 7 | **Quality dashboard screenshot** | Generated locally | Run `npm run qa:dashboard` (or full `npm run qa:all`), open **`qa/reports/dashboard.html`**, screenshot. |
+| 8 | **5–10 minute demo video** | You record | Follow [docs/DEMO_OUTLINE.md](docs/DEMO_OUTLINE.md); upload to YouTube, Loom, Drive, etc., and paste the link in your submission. |
+
 ## CI/CD overview
 
 | Workflow | When | What |

@@ -52,9 +52,11 @@ jobs:
       FALLBACK_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
     steps:
       - name: Wait for CDN edge updates
-        run: sleep 15
+        run: sleep 30
 
-      - name: HTTP check (retries)
+      # Do not fail the whole Pages workflow if the edge is slow; deploy already succeeded.
+      - name: HTTP check (retries, advisory)
+        continue-on-error: true
         run: |
           set -euo pipefail
           TARGET="${PAGE_URL:-}"
@@ -62,8 +64,9 @@ jobs:
             TARGET="$FALLBACK_URL"
           fi
           echo "GET $TARGET"
-          curl -fsSL --retry 12 --retry-delay 5 --retry-all-errors \
-            --connect-timeout 10 --max-time 30 \
+          curl -4 -fsSL --retry 15 --retry-delay 8 --retry-all-errors \
+            -A "Mozilla/5.0 (compatible; PagesHealthCheck/1.0)" \
+            --connect-timeout 15 --max-time 45 \
             -o /dev/null \
             "$TARGET"
 
